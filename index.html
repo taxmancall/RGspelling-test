@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>리딩게이트 단어</title>
+<style>
+  :root{
+    --bg:#fff7ee; --ink:#2b211a; --ink-soft:#7a6b5d; --card:#ffffff; --line:#efe2d2;
+    --lava1:#ff7a18; --lava2:#ff3d2e; --ember:#ffb347;
+    --green:#28a76a; --green-bg:#e6f8ee; --red:#e8483a; --red-bg:#fdecea; --gold:#ffb800;
+    --shadow:0 10px 30px rgba(190,80,20,.14);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{font-family:"Apple SD Gothic Neo","Malgun Gothic","Pretendard",system-ui,-apple-system,sans-serif;
+    background:radial-gradient(1200px 500px at 50% -200px,#ffe7cf 0%,transparent 60%),var(--bg);
+    color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:540px;margin:0 auto;padding:18px 16px 60px;}
+  .hidden{display:none !important;}
+
+  .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin:6px 0 14px;}
+  .brand .vol{font-size:30px;filter:drop-shadow(0 3px 6px rgba(255,80,20,.4));}
+  .brand h1{font-size:22px;margin:0;font-weight:900;letter-spacing:-.5px;
+    background:linear-gradient(100deg,var(--lava2),var(--lava1));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .brand small{display:block;text-align:center;color:var(--ink-soft);font-weight:600;font-size:12px;margin-top:-2px;}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .card h2{margin:0 0 4px;font-size:17px;font-weight:800;}
+  .hint{color:var(--ink-soft);font-size:13px;line-height:1.5;margin:0 0 12px;}
+
+  label.fld{display:block;font-size:13px;font-weight:700;color:var(--ink-soft);margin:0 0 6px;}
+  input[type=text], textarea, select{width:100%;font-family:inherit;font-size:16px;color:var(--ink);
+    background:#fdfaf6;border:2px solid var(--line);border-radius:14px;padding:12px 14px;outline:none;}
+  input[type=text]:focus, textarea:focus{border-color:var(--lava1);background:#fff;}
+  textarea{resize:vertical;line-height:1.5;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;font-weight:800;font-size:16px;
+    border:none;border-radius:16px;padding:14px 18px;cursor:pointer;transition:transform .08s ease,box-shadow .15s ease;width:100%;}
+  .btn:active{transform:scale(.97);}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .btn-primary{color:#fff;background:linear-gradient(100deg,var(--lava1),var(--lava2));box-shadow:0 8px 20px rgba(255,80,30,.35);}
+  .btn-ghost{background:#fff;color:var(--lava2);border:2px solid #ffd9c2;}
+  .btn-soft{background:#f4ece2;color:var(--ink);}
+  .btn-sm{padding:9px 12px;font-size:13px;width:auto;border-radius:12px;}
+  .row{display:flex;gap:10px;}
+  .row>*{flex:1;}
+
+  /* photo card */
+  .photo-card{background:linear-gradient(135deg,#fff,#fff3e8);border:2px dashed #ffd0b0;}
+  .photo-card h2{display:flex;align-items:center;gap:8px;}
+  .cam-btn{font-size:17px;padding:18px;}
+  .thumb-wrap{position:relative;margin-top:12px;display:none;}
+  .thumb-wrap img{width:100%;border-radius:14px;border:1px solid var(--line);max-height:240px;object-fit:cover;}
+  .ocr-status{display:none;align-items:center;gap:10px;margin-top:12px;background:#fff;border:1px solid var(--line);
+    border-radius:14px;padding:14px;font-weight:800;color:var(--lava2);}
+  .ocr-status .vol{font-size:26px;animation:bob 1.1s ease-in-out infinite;}
+  .ocr-status.err{color:var(--red);}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+  .wtable{display:flex;flex-direction:column;gap:8px;margin:8px 0 4px;}
+  .wrow{display:grid;grid-template-columns:26px 1fr 1fr 30px;gap:6px;align-items:center;}
+  .wrow.head{font-size:11px;font-weight:800;color:var(--ink-soft);padding:0 2px;}
+  .wrow input{font-size:14px;padding:9px 10px;border-radius:11px;}
+  .wrow .no{text-align:center;font-weight:800;color:var(--ink-soft);font-size:13px;}
+  .wrow .del{background:none;border:none;color:#cdbba9;font-size:20px;cursor:pointer;line-height:1;padding:0;}
+  .wrow .del:active{color:var(--red);}
+  .saved-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+  .saved-pill{display:inline-flex;align-items:center;gap:6px;background:#fff3e8;color:var(--lava2);
+    border:1px solid #ffdcc4;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .saved-pill .x{color:#d6b9a3;font-weight:900;}
+
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .chip{padding:12px;border:2px solid var(--line);border-radius:14px;background:#fff;font-weight:800;font-size:15px;
+    cursor:pointer;text-align:center;color:var(--ink);transition:all .12s;}
+  .chip.on{border-color:var(--lava1);background:#fff3ea;color:var(--lava2);box-shadow:0 4px 12px rgba(255,90,30,.18);}
+  .age-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .age{padding:18px 12px;border:2px solid var(--line);border-radius:18px;background:#fff;cursor:pointer;text-align:center;}
+  .age .big{font-size:30px;display:block;}
+  .age .lbl{font-weight:800;font-size:16px;margin-top:4px;}
+  .age .sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .age.on{border-color:var(--lava1);background:#fff3ea;box-shadow:0 6px 16px rgba(255,90,30,.2);}
+
+  .qtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .pbar{height:10px;background:#f0e3d4;border-radius:99px;overflow:hidden;flex:1;margin-right:12px;}
+  .pfill{height:100%;background:linear-gradient(90deg,var(--lava1),var(--lava2));border-radius:99px;transition:width .35s ease;}
+  .qcount{font-weight:800;font-size:13px;color:var(--ink-soft);white-space:nowrap;}
+  .qtype{display:inline-block;font-size:12px;font-weight:800;color:var(--lava2);background:#fff3e8;border-radius:99px;padding:5px 12px;margin-bottom:10px;}
+  .qbox{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px 18px;box-shadow:var(--shadow);margin-bottom:16px;text-align:center;}
+  .qprompt{font-size:20px;font-weight:800;line-height:1.5;color:var(--ink);}
+  .qprompt .blank{color:var(--lava2);font-weight:900;letter-spacing:1px;}
+  .qsub{font-size:14px;color:var(--ink-soft);margin-top:8px;font-weight:600;}
+  .spk{display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:#fff3e8;color:var(--lava2);
+    border:1px solid #ffdcc4;border-radius:99px;padding:8px 16px;font-weight:800;font-size:14px;cursor:pointer;}
+
+  .ans-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .ans{padding:18px 10px;border:2px solid var(--line);border-radius:16px;background:#fff;font-weight:800;font-size:18px;
+    cursor:pointer;text-align:center;color:var(--ink);transition:all .12s;word-break:break-word;}
+  .ans:active{transform:scale(.97);}
+  .ans.correct{border-color:var(--green);background:var(--green-bg);color:var(--green);}
+  .ans.wrong{border-color:var(--red);background:var(--red-bg);color:var(--red);}
+
+  .spell-in{font-size:24px;text-align:center;letter-spacing:3px;font-weight:800;padding:16px;}
+  .spell-hint{font-size:30px;letter-spacing:6px;text-align:center;color:var(--ink-soft);font-weight:800;margin:6px 0 14px;}
+
+  .feedback{text-align:center;padding:14px;border-radius:16px;font-weight:800;font-size:17px;margin-top:14px;}
+  .feedback.ok{background:var(--green-bg);color:var(--green);}
+  .feedback.no{background:var(--red-bg);color:var(--red);}
+  .feedback .small{display:block;font-size:14px;font-weight:600;margin-top:4px;color:var(--ink-soft);}
+
+  .score-big{font-size:54px;font-weight:900;text-align:center;
+    background:linear-gradient(100deg,var(--lava2),var(--lava1));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;}
+  .stars{font-size:32px;text-align:center;margin:6px 0;}
+  .result-msg{text-align:center;font-weight:800;font-size:18px;margin:4px 0 16px;}
+  .review-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:13px;background:#fdf6ee;margin-bottom:8px;border:1px solid var(--line);}
+  .review-item .w{font-weight:800;} .review-item .m{font-size:12px;color:var(--ink-soft);}
+  .review-item .rspk{margin-left:auto;background:none;border:none;font-size:20px;cursor:pointer;}
+
+  .footnote{text-align:center;color:#bba894;font-size:11px;margin-top:18px;}
+  @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <span class="vol">🌋</span>
+    <div><h1>리딩게이트 단어</h1><small id="brandSub">매주 단어 테스트</small></div>
+  </div>
+
+  <!-- ============ 단어장 화면 ============ -->
+  <div id="homeScreen">
+
+    <!-- 사진 업로드 -->
+    <div class="card photo-card">
+      <h2>📷 사진으로 단어 올리기</h2>
+      <p class="hint">이번 주 단어장(Vocabulary List)을 <b>사진으로 찍어 올리면</b> 단어를 자동으로 읽어서 아래 표에 채워줘요. 글자를 잘못 읽을 수도 있으니 표에서 확인·수정 후 저장하세요.</p>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+      <button class="btn btn-primary cam-btn" id="photoBtn">📸 사진 찍기 / 사진 선택</button>
+      <div class="thumb-wrap" id="thumbWrap"><img id="thumbImg" alt="올린 사진"></div>
+      <div class="ocr-status" id="ocrStatus"><span class="vol">🌋</span><span id="ocrText">사진에서 단어 읽는 중…</span></div>
+    </div>
+
+    <!-- 단어장 표 -->
+    <div class="card">
+      <h2>📚 이번 주 단어장</h2>
+      <label class="fld">책 제목</label>
+      <input type="text" id="bookTitle" placeholder="예: Hill of Fire (Green 2B)">
+      <div class="wtable">
+        <div class="wrow head"><span></span><span>단어</span><span>뜻 (한글)</span><span></span></div>
+        <div id="wordRows"></div>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <button class="btn btn-soft btn-sm" id="addRow">＋ 줄 추가</button>
+        <button class="btn btn-soft btn-sm" id="pasteToggle">📋 손으로 입력</button>
+      </div>
+      <div id="pasteBox" class="hidden" style="margin-top:12px;">
+        <label class="fld">한 줄에 한 단어: <b>단어 , 뜻</b></label>
+        <textarea id="pasteArea" rows="5" placeholder="ash, (화산) 재&#10;burros, 작은 당나귀"></textarea>
+        <button class="btn btn-ghost btn-sm" id="pasteApply" style="margin-top:8px;">표에 넣기</button>
+      </div>
+      <button class="btn btn-primary" id="saveBook" style="margin-top:14px;">💾 단어장 저장</button>
+      <div id="savedList" class="saved-wrap"></div>
+    </div>
+
+    <!-- 테스트 설정 -->
+    <div class="card">
+      <h2>📝 테스트 설정</h2>
+      <label class="fld" style="margin-top:4px;">누가 풀까요?</label>
+      <div class="age-opts" id="ageOpts">
+        <div class="age on" data-age="7"><span class="big">🧒</span><span class="lbl">7살</span><span class="sub">한글 뜻 · 힌트 많이</span></div>
+        <div class="age" data-age="9"><span class="big">🧑</span><span class="lbl">9살</span><span class="sub">영어 뜻 · 힌트 적게</span></div>
+      </div>
+      <label class="fld" style="margin-top:16px;">유형</label>
+      <div class="opts" id="typeOpts">
+        <div class="chip on" data-type="mix">🎲 섞어서</div>
+        <div class="chip" data-type="def">①뜻→단어</div>
+        <div class="chip" data-type="cloze">②문장 빈칸</div>
+        <div class="chip" data-type="spell">③스펠링 쓰기</div>
+      </div>
+      <label class="fld" style="margin-top:16px;">문제 수</label>
+      <div class="opts" id="countOpts" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="chip" data-count="5">5개</div>
+        <div class="chip on" data-count="10">10개</div>
+        <div class="chip" data-count="all">전체</div>
+      </div>
+      <button class="btn btn-primary" id="startBtn" style="margin-top:18px;">🚀 테스트 시작!</button>
+    </div>
+    <p class="footnote">friend made this · taxmancall</p>
+  </div>
+
+  <!-- 로딩 -->
+  <div id="loadingScreen" class="hidden">
+    <div class="card" style="text-align:center;padding:40px 20px;">
+      <div style="font-size:46px;animation:bob 1.2s ease-in-out infinite;">🌋</div>
+      <p style="font-weight:800;margin-top:10px;">문장 만드는 중이에요…</p>
+      <small style="color:var(--ink-soft);">단어에 맞는 쉬운 영어 문장을 만들고 있어요</small>
+    </div>
+  </div>
+
+  <!-- 퀴즈 -->
+  <div id="quizScreen" class="hidden">
+    <div class="qtop">
+      <div class="pbar"><div class="pfill" id="pfill" style="width:0%"></div></div>
+      <span class="qcount" id="qcount">1 / 10</span>
+    </div>
+    <div style="text-align:center;"><span class="qtype" id="qtype"></span></div>
+    <div class="qbox">
+      <div class="qprompt" id="qprompt"></div>
+      <div class="qsub" id="qsub"></div>
+      <div id="spellHint" class="spell-hint hidden"></div>
+      <button class="spk hidden" id="spkBtn">🔊 듣기</button>
+    </div>
+    <div id="answerArea"></div>
+    <div id="feedback"></div>
+    <button class="btn btn-primary hidden" id="nextBtn" style="margin-top:14px;">다음 ▶</button>
+    <button class="btn btn-soft btn-sm hidden" id="quitBtn" style="margin:14px auto 0;display:block;">그만하기</button>
+  </div>
+
+  <!-- 결과 -->
+  <div id="resultScreen" class="hidden">
+    <div class="card" style="text-align:center;">
+      <div class="stars" id="resStars"></div>
+      <div class="score-big" id="resScore"></div>
+      <div class="result-msg" id="resMsg"></div>
+      <div class="row">
+        <button class="btn btn-primary" id="retryBtn">🔁 다시 풀기</button>
+        <button class="btn btn-ghost" id="homeBtn">🏠 처음으로</button>
+      </div>
+    </div>
+    <div class="card" id="reviewCard">
+      <h2>📌 틀린 단어 복습</h2>
+      <div id="reviewList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ===== 상태 ===== */
+const SEED={ title:"Hill of Fire (Green 2B)", words:[
+  {word:"ash",ko:"(화산) 재",en:"what remains after something is burned"},
+  {word:"burros",ko:"작은 당나귀",en:"a horse-like animal used to carry things"},
+  {word:"cinnamon",ko:"계피",en:"a spice usually used in sweet foods"},
+  {word:"cross",ko:"십자가",en:"a mark of two lines crossing"},
+  {word:"fiesta",ko:"(라틴아메리카의) 종교 축제, 성일",en:"a Spanish word for party"},
+  {word:"flat",ko:"맛없는",en:"not tasty"},
+  {word:"foolish",ko:"어리석은",en:"silly, stupid"},
+  {word:"ground",ko:"땅, 운동장",en:"surface of the earth"},
+  {word:"growl",ko:"으르렁거리다",en:"to make a low rough angry noise"},
+  {word:"lava",ko:"용암",en:"melted rock from a volcano"},
+  {word:"oxen",ko:"(ox의 복수) 수소들",en:"the plural of ox"},
+  {word:"peg",ko:"못, 말뚝",en:"a hook to hang clothes or hats"},
+  {word:"plow",ko:"쟁기 / 경작하다",en:"a farming tool to push dirt"},
+  {word:"steaming",ko:"김을 푹푹 내는",en:"producing a lot of water vapor"},
+  {word:"volcano",ko:"화산",en:"an opening that lets out lava and ash"}
+]};
+const state={ age:7, type:"mix", count:"10", quiz:[], idx:0, score:0, wrong:[], sentences:{} };
+
+/* ===== 저장 ===== */
+const mem={};
+async function sget(k){ try{const r=await window.storage.get(k);return r?JSON.parse(r.value):(mem[k]??null);}catch(e){return mem[k]??null;} }
+async function sset(k,v){ try{await window.storage.set(k,JSON.stringify(v));}catch(e){} mem[k]=v; }
+const BOOKS_KEY="rg_books_v2", SENT_KEY="rg_sentences_v1";
+
+/* ===== 유틸 ===== */
+const $=s=>document.querySelector(s);
+const escAttr=s=>(s||"").replace(/"/g,"&quot;");
+const escHtml=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const escReg=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;}
+
+/* ===== 단어 표 ===== */
+const wordRows=$("#wordRows");
+function makeRow(no,word="",ko="",en=""){
+  const div=document.createElement("div"); div.className="wrow"; div.dataset.en=en;
+  div.innerHTML=`<span class="no">${no}</span>
+    <input type="text" class="w-word" value="${escAttr(word)}" placeholder="단어">
+    <input type="text" class="w-ko" value="${escAttr(ko)}" placeholder="뜻">
+    <button class="del">×</button>`;
+  div.querySelector(".del").onclick=()=>{div.remove();renumber();};
+  return div;
+}
+function renumber(){[...wordRows.children].forEach((r,i)=>r.querySelector(".no").textContent=i+1);}
+function renderWords(words){
+  wordRows.innerHTML="";
+  words.forEach((w,i)=>wordRows.appendChild(makeRow(i+1,w.word||w[0],w.ko||w[1],w.en||"")));
+}
+function readWords(){
+  return [...wordRows.children].map(r=>({
+    word:r.querySelector(".w-word").value.trim(),
+    ko:r.querySelector(".w-ko").value.trim(),
+    en:(r.dataset.en||"").trim()
+  })).filter(w=>w.word);
+}
+$("#addRow").onclick=()=>wordRows.appendChild(makeRow(wordRows.children.length+1));
+$("#pasteToggle").onclick=()=>$("#pasteBox").classList.toggle("hidden");
+$("#pasteApply").onclick=()=>{
+  const lines=$("#pasteArea").value.split("\n").map(l=>l.trim()).filter(Boolean);
+  const parsed=lines.map(l=>{const p=l.split(/\t|,/).map(x=>x.trim());return {word:p[0]||"",ko:p.slice(1).join(", ")||"",en:""};}).filter(p=>p.word);
+  if(parsed.length){renderWords(parsed);$("#pasteBox").classList.add("hidden");$("#pasteArea").value="";}
+};
+
+/* ===== 📷 사진 → 단어 추출 ===== */
+$("#photoBtn").onclick=()=>$("#photoInput").click();
+$("#photoInput").onchange=async(e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const {base64,media,dataUrl}=await compressImage(file);
+  $("#thumbImg").src=dataUrl; $("#thumbWrap").style.display="block";
+  const status=$("#ocrStatus"); status.style.display="flex"; status.classList.remove("err");
+  $("#ocrText").textContent="사진에서 단어 읽는 중…";
+  $("#photoBtn").disabled=true;
+  try{
+    const result=await extractFromImage(base64,media);
+    if(result.title) $("#bookTitle").value=result.title;
+    if(result.words && result.words.length){
+      renderWords(result.words);
+      $("#ocrText").textContent=`✅ ${result.words.length}개 단어를 읽었어요! 표에서 확인·수정하세요.`;
+    }else{
+      status.classList.add("err");
+      $("#ocrText").textContent="단어를 못 읽었어요. 다시 또렷하게 찍거나 '손으로 입력'을 써 주세요.";
+    }
+  }catch(err){
+    status.classList.add("err");
+    $("#ocrText").textContent="읽기에 실패했어요. 다시 시도하거나 손으로 입력해 주세요.";
+  }
+  $("#photoBtn").disabled=false;
+  e.target.value="";
+};
+
+function compressImage(file,maxDim=1600,q=0.85){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        const s=Math.min(1,maxDim/Math.max(w,h));
+        w=Math.round(w*s); h=Math.round(h*s);
+        const c=document.createElement("canvas"); c.width=w; c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        const dataUrl=c.toDataURL("image/jpeg",q);
+        resolve({base64:dataUrl.split(",")[1],media:"image/jpeg",dataUrl});
+      };
+      img.onerror=reject; img.src=reader.result;
+    };
+    reader.onerror=reject; reader.readAsDataURL(file);
+  });
+}
+
+async function extractFromImage(base64,media){
+  const prompt=`This image is a Korean English-learning worksheet titled "Vocabulary List".
+Extract the vocabulary table and book title. Output ONLY valid JSON, no markdown, no backticks, no extra text.
+Format:
+{"title":"<book title, you may add level/set in parentheses>","words":[{"word":"<english vocabulary>","ko":"<korean definition>","en":"<english definition, keep under 10 words>"}]}
+Rules:
+- Include EVERY row in the table, in order.
+- word = the English vocabulary exactly as written (keep plural forms like "oxen", "burros").
+- ko = the Korean meaning column. en = the English definition column (shorten if long).
+- If a cell is empty, use "".`;
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
+      messages:[{role:"user",content:[
+        {type:"image",source:{type:"base64",media_type:media,data:base64}},
+        {type:"text",text:prompt}
+      ]}]})
+  });
+  const data=await res.json();
+  const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+  return parseJsonLoose(text);
+}
+function parseJsonLoose(text){
+  let t=text.replace(/```json|```/g,"").trim();
+  try{return JSON.parse(t);}catch(e){}
+  const a=t.indexOf("{"), b=t.lastIndexOf("}");
+  if(a>=0&&b>a){ try{return JSON.parse(t.slice(a,b+1));}catch(e){} }
+  return {title:"",words:[]};
+}
+
+/* ===== 저장/불러오기 ===== */
+$("#saveBook").onclick=async()=>{
+  const title=$("#bookTitle").value.trim()||"제목없는 단어장";
+  const words=readWords();
+  if(!words.length){alert("단어를 먼저 입력해 주세요.");return;}
+  let books=await sget(BOOKS_KEY)||[];
+  const i=books.findIndex(b=>b.title===title);
+  const entry={title,words,ts:Date.now()};
+  if(i>=0)books[i]=entry; else books.unshift(entry);
+  await sset(BOOKS_KEY,books); renderSaved(books);
+  const btn=$("#saveBook"); btn.textContent="✅ 저장됐어요!"; setTimeout(()=>btn.textContent="💾 단어장 저장",1500);
+};
+function renderSaved(books){
+  const wrap=$("#savedList"); wrap.innerHTML="";
+  if(!books||!books.length) return;
+  const lbl=document.createElement("div");
+  lbl.style.cssText="width:100%;font-size:12px;color:var(--ink-soft);font-weight:700;margin-bottom:2px;";
+  lbl.textContent="저장된 단어장 (눌러서 불러오기)"; wrap.appendChild(lbl);
+  books.forEach(b=>{
+    const pill=document.createElement("span"); pill.className="saved-pill";
+    pill.innerHTML=`📗 ${escHtml(b.title)} <span class="x">✕</span>`;
+    pill.onclick=(e)=>{
+      if(e.target.classList.contains("x")){ if(confirm(`"${b.title}" 삭제할까요?`)) deleteBook(b.title); return; }
+      $("#bookTitle").value=b.title; renderWords(b.words); window.scrollTo({top:0,behavior:"smooth"});
+    };
+    wrap.appendChild(pill);
+  });
+}
+async function deleteBook(title){ let books=await sget(BOOKS_KEY)||[]; books=books.filter(b=>b.title!==title); await sset(BOOKS_KEY,books); renderSaved(books); }
+
+/* ===== 설정 칩 ===== */
+function pickGroup(sel,attr,cb){
+  document.querySelectorAll(sel+" [data-"+attr+"]").forEach(el=>el.onclick=()=>{
+    el.parentNode.querySelectorAll("[data-"+attr+"]").forEach(x=>x.classList.remove("on"));
+    el.classList.add("on"); cb(el.getAttribute("data-"+attr));
+  });
+}
+pickGroup("#ageOpts","age",v=>state.age=+v);
+pickGroup("#typeOpts","type",v=>state.type=v);
+pickGroup("#countOpts","count",v=>state.count=v);
+
+/* ===== 문장 생성(Claude) ===== */
+async function ensureSentences(words){
+  const cached=await sget(SENT_KEY)||{};
+  state.sentences={...cached,...state.sentences};
+  const need=words.filter(w=>!state.sentences[w.toLowerCase()]);
+  if(!need.length) return;
+  for(const grp of chunk(need,8)){
+    const prompt=`You write example sentences for Korean children aged 7-9 learning English.
+Output ONLY a JSON array. No markdown, no backticks.
+For each word write ONE short simple sentence (6 to 11 words) a young child understands.
+Use the EXACT word form. The word must appear exactly once.
+Words: ${grp.join(", ")}
+Return: [{"word":"ash","sentence":"The fire left gray ash on the floor."}]`;
+    try{
+      const res=await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+      const data=await res.json();
+      const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+      let t=text.replace(/```json|```/g,"").trim();
+      const a=t.indexOf("["),b=t.lastIndexOf("]"); if(a>=0&&b>a)t=t.slice(a,b+1);
+      JSON.parse(t).forEach(o=>{if(o&&o.word&&o.sentence)state.sentences[o.word.toLowerCase()]=o.sentence;});
+    }catch(e){}
+  }
+  await sset(SENT_KEY,state.sentences);
+}
+function blankSentence(word){
+  const s=state.sentences[word.toLowerCase()]; if(!s)return null;
+  const re=new RegExp("\\b"+escReg(word)+"\\b","i");
+  return re.test(s)? s.replace(re,"○○○○") : null;
+}
+
+/* ===== 퀴즈 생성 ===== */
+function distractors(answer,words,k=3){
+  return shuffle(words.map(w=>w.word).filter(x=>x.toLowerCase()!==answer.toLowerCase())).slice(0,k);
+}
+function makeQuestion(w,type,words){
+  if(type==="cloze"&&!blankSentence(w.word)) type="def";
+  if(type==="def"||type==="cloze") return {type,word:w.word,ko:w.ko,en:w.en,opts:shuffle([w.word,...distractors(w.word,words)])};
+  return {type:"spell",word:w.word,ko:w.ko,en:w.en};
+}
+function buildQuiz(words){
+  const n=state.count==="all"?words.length:Math.min(+state.count,words.length);
+  const picked=shuffle(words).slice(0,n);
+  const types=["def","cloze","spell"];
+  return picked.map((w,i)=>makeQuestion(w, state.type==="mix"?types[i%3]:state.type, words)).sort(()=>Math.random()-0.5);
+}
+
+function show(id){["homeScreen","loadingScreen","quizScreen","resultScreen"].forEach(s=>$("#"+s).classList.toggle("hidden",s!==id));window.scrollTo(0,0);}
+
+$("#startBtn").onclick=async()=>{
+  const words=readWords();
+  if(words.length<4){alert("단어를 최소 4개 이상 입력해 주세요.");return;}
+  $("#brandSub").textContent=$("#bookTitle").value.trim()||"매주 단어 테스트";
+  if(state.type==="mix"||state.type==="cloze"){ show("loadingScreen"); await ensureSentences(words.map(w=>w.word)); }
+  state.quiz=buildQuiz(words); state.idx=0; state.score=0; state.wrong=[];
+  show("quizScreen"); renderQuestion();
+};
+
+/* ===== 문제 렌더 ===== */
+const TYPE_LABEL={def:"① 뜻 보고 단어 고르기",cloze:"② 문장 빈칸 채우기",spell:"③ 스펠링 쓰기"};
+function renderQuestion(){
+  const q=state.quiz[state.idx], total=state.quiz.length;
+  $("#pfill").style.width=(state.idx/total*100)+"%";
+  $("#qcount").textContent=`${state.idx+1} / ${total}`;
+  $("#qtype").textContent=TYPE_LABEL[q.type];
+  $("#feedback").innerHTML=""; $("#feedback").className="";
+  $("#nextBtn").classList.add("hidden"); $("#quitBtn").classList.remove("hidden");
+  $("#spellHint").classList.add("hidden"); $("#spkBtn").classList.add("hidden");
+  const prompt=$("#qprompt"), sub=$("#qsub"), area=$("#answerArea"); area.innerHTML="";
+
+  if(q.type==="def"){
+    const useEn = state.age===9 && q.en;
+    prompt.innerHTML=`뜻: <span style="color:var(--lava2)">${escHtml(useEn?q.en:q.ko)}</span>`;
+    sub.textContent=state.age===7?"알맞은 단어를 골라요":"이 뜻을 가진 단어는?";
+    renderChoices(q);
+  }else if(q.type==="cloze"){
+    const sent=blankSentence(q.word);
+    prompt.innerHTML=`<span>${escHtml(sent).replace("○○○○",'<span class="blank">○○○○</span>')}</span>`;
+    sub.textContent=state.age===7?`힌트 — 뜻: ${q.ko||""}`:"빈칸에 알맞은 단어는?";
+    renderChoices(q);
+  }else{
+    const useEn=state.age===9&&q.en;
+    prompt.innerHTML=`뜻: <span style="color:var(--lava2)">${escHtml(useEn?q.en:q.ko)}</span>`;
+    sub.textContent=state.age===7?"철자를 써 보아요 (힌트 있어요)":"단어의 철자를 쓰세요";
+    if(state.age===7){ $("#spellHint").textContent=q.word[0]+" "+"_ ".repeat(q.word.length-1).trim(); $("#spellHint").classList.remove("hidden"); }
+    const inp=document.createElement("input"); inp.type="text"; inp.className="spell-in"; inp.autocomplete="off"; inp.autocapitalize="off"; inp.spellcheck=false; inp.placeholder="여기에 영어로";
+    area.appendChild(inp);
+    const btn=document.createElement("button"); btn.className="btn btn-primary"; btn.style.marginTop="12px"; btn.textContent="확인";
+    btn.onclick=()=>checkSpell(inp.value,q,inp,btn);
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter")btn.click();});
+    area.appendChild(btn); setTimeout(()=>inp.focus(),150);
+  }
+}
+function renderChoices(q){
+  const grid=document.createElement("div"); grid.className="ans-opts";
+  q.opts.forEach(opt=>{ const b=document.createElement("button"); b.className="ans"; b.textContent=opt; b.onclick=()=>checkChoice(opt,q,grid); grid.appendChild(b); });
+  $("#answerArea").appendChild(grid);
+}
+function speak(word){ try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(word);u.lang="en-US";u.rate=0.8;speechSynthesis.speak(u);}catch(e){} }
+function afterAnswer(correct,q){
+  if(correct){state.score++;speak(q.word);} else state.wrong.push(q);
+  const spk=$("#spkBtn"); spk.classList.remove("hidden"); spk.onclick=()=>speak(q.word);
+  $("#quitBtn").classList.add("hidden");
+  const fb=$("#feedback");
+  if(correct){fb.className="feedback ok";fb.innerHTML=`🎉 정답이에요! <span class="small">${escHtml(q.word)} — ${escHtml(q.ko||"")}</span>`;}
+  else{fb.className="feedback no";fb.innerHTML=`💪 괜찮아요! 정답은 <b>${escHtml(q.word)}</b> <span class="small">${escHtml(q.ko||"")}</span>`;}
+  $("#pfill").style.width=((state.idx+1)/state.quiz.length*100)+"%";
+  $("#nextBtn").classList.remove("hidden");
+  $("#nextBtn").textContent=state.idx+1>=state.quiz.length?"결과 보기 🏆":"다음 ▶";
+}
+function checkChoice(opt,q,grid){
+  [...grid.children].forEach(b=>{b.disabled=true;if(b.textContent===q.word)b.classList.add("correct");if(b.textContent===opt&&opt!==q.word)b.classList.add("wrong");});
+  afterAnswer(opt===q.word,q);
+}
+function checkSpell(val,q,inp,btn){
+  const ok=val.trim().toLowerCase()===q.word.toLowerCase();
+  inp.disabled=true;btn.disabled=true;
+  inp.style.borderColor=ok?"var(--green)":"var(--red)"; inp.style.color=ok?"var(--green)":"var(--red)";
+  afterAnswer(ok,q);
+}
+$("#nextBtn").onclick=()=>{state.idx++;state.idx>=state.quiz.length?showResult():renderQuestion();};
+$("#quitBtn").onclick=()=>{if(confirm("그만할까요? 지금까지 결과를 보여줄게요.")){state.quiz=state.quiz.slice(0,state.idx);showResult();}};
+
+/* ===== 결과 ===== */
+function showResult(){
+  show("resultScreen");
+  const total=state.quiz.length||1, pct=Math.round(state.score/total*100);
+  $("#resScore").textContent=`${state.score} / ${total}`;
+  $("#resStars").textContent=pct>=90?"⭐⭐⭐⭐⭐":pct>=70?"⭐⭐⭐⭐":pct>=50?"⭐⭐⭐":pct>=30?"⭐⭐":"⭐";
+  $("#resMsg").textContent=pct>=90?"우와! 거의 다 맞았어요! 최고예요! 🏆":pct>=70?"아주 잘했어요! 👏":pct>=50?"좋아요! 조금만 더 힘내요! 😊":"괜찮아요, 다시 한 번 해볼까요? 💪";
+  const rl=$("#reviewList");
+  if(!state.wrong.length){$("#reviewCard").classList.add("hidden");}
+  else{
+    $("#reviewCard").classList.remove("hidden"); rl.innerHTML="";
+    state.wrong.forEach(q=>{
+      const d=document.createElement("div"); d.className="review-item";
+      d.innerHTML=`<span style="font-size:18px;">📍</span><div><div class="w">${escHtml(q.word)}</div><div class="m">${escHtml(q.ko||"")}</div></div><button class="rspk">🔊</button>`;
+      d.querySelector(".rspk").onclick=()=>speak(q.word); rl.appendChild(d);
+    });
+  }
+}
+$("#retryBtn").onclick=()=>{const w=readWords();state.quiz=buildQuiz(w);state.idx=0;state.score=0;state.wrong=[];show("quizScreen");renderQuestion();};
+$("#homeBtn").onclick=()=>show("homeScreen");
+
+/* ===== 초기화 ===== */
+(async function init(){
+  const books=await sget(BOOKS_KEY);
+  if(books&&books.length){ $("#bookTitle").value=books[0].title; renderWords(books[0].words); renderSaved(books); }
+  else{ $("#bookTitle").value=SEED.title; renderWords(SEED.words); }
+  const sent=await sget(SENT_KEY); if(sent)state.sentences=sent;
+})();
+</script>
+</body>
+</html>
