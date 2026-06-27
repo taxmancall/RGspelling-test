@@ -59,9 +59,10 @@
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 
   .wtable{display:flex;flex-direction:column;gap:8px;margin:8px 0 4px;}
-  .wrow{display:grid;grid-template-columns:26px 1fr 1fr 30px;gap:6px;align-items:center;}
-  .wrow.head{font-size:11px;font-weight:800;color:var(--ink-soft);padding:0 2px;}
-  .wrow input{font-size:14px;padding:9px 10px;border-radius:11px;}
+  .wrow{display:grid;grid-template-columns:22px 0.85fr 1.05fr 1.05fr 24px;gap:5px;align-items:center;}
+  .wrow.head{font-size:10.5px;font-weight:800;color:var(--ink-soft);padding:0 1px;}
+  .wrow input{font-size:13px;padding:8px 8px;border-radius:10px;}
+  .wrow .w-word{font-weight:700;}
   .wrow .no{text-align:center;font-weight:800;color:var(--ink-soft);font-size:13px;}
   .wrow .del{background:none;border:none;color:#cdbba9;font-size:20px;cursor:pointer;line-height:1;padding:0;}
   .wrow .del:active{color:var(--red);}
@@ -150,7 +151,7 @@
     <div class="card photo-card">
       <h2>📷 사진으로 단어 올리기</h2>
       <p class="hint">이번 주 단어장(Vocabulary List)을 <b>사진으로 찍어 올리면</b> 단어를 자동으로 읽어서 아래 표에 채워줘요. 글자를 잘못 읽을 수도 있으니 표에서 확인·수정 후 저장하세요.</p>
-      <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden">
+      <input type="file" id="photoInput" accept="image/*" class="hidden">
       <button class="btn btn-primary cam-btn" id="photoBtn">📸 사진 찍기 / 사진 선택</button>
       <div class="thumb-wrap" id="thumbWrap"><img id="thumbImg" alt="올린 사진"></div>
       <div class="ocr-status" id="ocrStatus"><span class="vol">🌋</span><span id="ocrText">사진에서 단어 읽는 중…</span></div>
@@ -175,7 +176,7 @@
       <label class="fld">책 제목</label>
       <input type="text" id="bookTitle" placeholder="예: Hill of Fire (Green 2B)">
       <div class="wtable">
-        <div class="wrow head"><span></span><span>단어</span><span>뜻 (한글)</span><span></span></div>
+        <div class="wrow head"><span></span><span>단어</span><span>뜻 (한글)</span><span>뜻 (영어)</span><span></span></div>
         <div id="wordRows"></div>
       </div>
       <div class="row" style="margin-top:6px;">
@@ -196,7 +197,7 @@
       <h2>📝 테스트 설정</h2>
       <label class="fld" style="margin-top:4px;">누가 풀까요?</label>
       <div class="age-opts" id="ageOpts">
-        <div class="age on" data-age="7"><span class="big">🧒</span><span class="lbl">7살</span><span class="sub">한글 뜻 · 힌트 많이</span></div>
+        <div class="age on" data-age="7"><span class="big">🧒</span><span class="lbl">7살</span><span class="sub">영어 뜻 · 한글 힌트</span></div>
         <div class="age" data-age="9"><span class="big">🧑</span><span class="lbl">9살</span><span class="sub">영어 뜻 · 힌트 적게</span></div>
       </div>
       <label class="fld" style="margin-top:16px;">유형</label>
@@ -394,10 +395,11 @@ function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n)
 /* ===== 단어 표 ===== */
 const wordRows=$("#wordRows");
 function makeRow(no,word="",ko="",en=""){
-  const div=document.createElement("div"); div.className="wrow"; div.dataset.en=en;
+  const div=document.createElement("div"); div.className="wrow";
   div.innerHTML=`<span class="no">${no}</span>
     <input type="text" class="w-word" value="${escAttr(word)}" placeholder="단어">
-    <input type="text" class="w-ko" value="${escAttr(ko)}" placeholder="뜻">
+    <input type="text" class="w-ko" value="${escAttr(ko)}" placeholder="한글 뜻">
+    <input type="text" class="w-en" value="${escAttr(en)}" placeholder="영어 뜻">
     <button class="del">×</button>`;
   div.querySelector(".del").onclick=()=>{div.remove();renumber();};
   return div;
@@ -411,7 +413,7 @@ function readWords(){
   return [...wordRows.children].map(r=>({
     word:r.querySelector(".w-word").value.trim(),
     ko:r.querySelector(".w-ko").value.trim(),
-    en:(r.dataset.en||"").trim()
+    en:(r.querySelector(".w-en")?.value||"").trim()
   })).filter(w=>w.word);
 }
 $("#addRow").onclick=()=>wordRows.appendChild(makeRow(wordRows.children.length+1));
@@ -610,9 +612,10 @@ function renderQuestion(){
   const prompt=$("#qprompt"), sub=$("#qsub"), area=$("#answerArea"); area.innerHTML="";
 
   if(q.type==="def"){
-    const useEn = state.age===9 && q.en;
-    prompt.innerHTML=`뜻: <span style="color:var(--lava2)">${escHtml(useEn?q.en:q.ko)}</span>`;
-    sub.textContent=state.age===7?"알맞은 단어를 골라요":"이 뜻을 가진 단어는?";
+    const main = q.en || q.ko;                 // 영어 뜻 우선, 없으면 한글
+    prompt.innerHTML=`뜻: <span style="color:var(--lava2)">${escHtml(main)}</span>`;
+    sub.textContent = (state.age===7 && q.en && q.ko) ? `힌트 — ${q.ko}`
+                    : (state.age===7 ? "알맞은 단어를 골라요" : "이 뜻을 가진 단어는?");
     renderChoices(q);
   }else if(q.type==="cloze"){
     const sent=blankSentence(q.word);
@@ -620,9 +623,11 @@ function renderQuestion(){
     sub.textContent=state.age===7?`힌트 — 뜻: ${q.ko||""}`:"빈칸에 알맞은 단어는?";
     renderChoices(q);
   }else{
-    const useEn=state.age===9&&q.en;
-    prompt.innerHTML=`뜻: <span style="color:var(--lava2)">${escHtml(useEn?q.en:q.ko)}</span>`;
-    sub.textContent=state.age===7?"철자를 써 보아요 (힌트 있어요)":"단어의 철자를 쓰세요";
+    const main = q.en || q.ko;                 // 영어 뜻 우선, 없으면 한글
+    prompt.innerHTML=`뜻: <span style="color:var(--lava2)">${escHtml(main)}</span>`;
+    sub.textContent = state.age===7
+      ? (q.en && q.ko ? `힌트 — ${q.ko}` : "철자를 써 보아요 (힌트 있어요)")
+      : "단어의 철자를 쓰세요";
     if(state.age===7){ $("#spellHint").textContent=q.word[0]+" "+"_ ".repeat(q.word.length-1).trim(); $("#spellHint").classList.remove("hidden"); }
     const inp=document.createElement("input"); inp.type="text"; inp.className="spell-in"; inp.autocomplete="off"; inp.autocapitalize="off"; inp.spellcheck=false; inp.placeholder="여기에 영어로";
     area.appendChild(inp);
