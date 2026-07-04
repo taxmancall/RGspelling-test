@@ -59,13 +59,15 @@
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 
   .wtable{display:flex;flex-direction:column;gap:8px;margin:8px 0 4px;}
-  .wrow{display:grid;grid-template-columns:22px 0.85fr 1.05fr 1.05fr 24px;gap:5px;align-items:center;}
+  .wrow{display:grid;grid-template-columns:22px 0.85fr 26px 1.05fr 1.05fr 24px;gap:5px;align-items:center;}
   .wrow.head{font-size:10.5px;font-weight:800;color:var(--ink-soft);padding:0 1px;}
   .wrow input{font-size:13px;padding:8px 8px;border-radius:10px;}
   .wrow .w-word{font-weight:700;}
   .wrow .no{text-align:center;font-weight:800;color:var(--ink-soft);font-size:13px;}
   .wrow .del{background:none;border:none;color:#cdbba9;font-size:20px;cursor:pointer;line-height:1;padding:0;}
   .wrow .del:active{color:var(--red);}
+  .wrow .rowspk{background:none;border:none;color:var(--lava2);font-size:17px;cursor:pointer;line-height:1;padding:0;text-align:center;}
+  .wrow .rowspk:active{transform:scale(.9);}
   .saved-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
   .saved-pill{display:inline-flex;align-items:center;gap:6px;background:#fff3e8;color:var(--lava2);
     border:1px solid #ffdcc4;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;}
@@ -176,7 +178,7 @@
       <label class="fld">책 제목</label>
       <input type="text" id="bookTitle" placeholder="예: Hill of Fire (Green 2B)">
       <div class="wtable">
-        <div class="wrow head"><span></span><span>단어</span><span>뜻 (한글)</span><span>뜻 (영어)</span><span></span></div>
+        <div class="wrow head"><span></span><span>단어</span><span></span><span>뜻 (한글)</span><span>뜻 (영어)</span><span></span></div>
         <div id="wordRows"></div>
       </div>
       <div class="row" style="margin-top:6px;">
@@ -398,10 +400,12 @@ function makeRow(no,word="",ko="",en=""){
   const div=document.createElement("div"); div.className="wrow";
   div.innerHTML=`<span class="no">${no}</span>
     <input type="text" class="w-word" value="${escAttr(word)}" placeholder="단어">
+    <button class="rowspk" title="발음 듣기">🔊</button>
     <input type="text" class="w-ko" value="${escAttr(ko)}" placeholder="한글 뜻">
     <input type="text" class="w-en" value="${escAttr(en)}" placeholder="영어 뜻">
     <button class="del">×</button>`;
   div.querySelector(".del").onclick=()=>{div.remove();renumber();};
+  div.querySelector(".rowspk").onclick=()=>speak(div.querySelector(".w-word").value.trim());
   return div;
 }
 function renumber(){[...wordRows.children].forEach((r,i)=>r.querySelector(".no").textContent=i+1);}
